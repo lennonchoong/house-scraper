@@ -2,7 +2,6 @@ import requests
 import re
 import json
 from bs4 import BeautifulSoup
-import pprint
 from math import sin, cos, sqrt, atan2, radians
 from itertools import filterfalse
 import os.path
@@ -18,7 +17,7 @@ MIN_PRICE = int(round(config["MIN_PRICE"] * config["BEDROOMS"] * 4.4, -2))
 MAX_PRICE = int(round(config["MAX_PRICE"] * config["BEDROOMS"] * 4.4, -2))
 
 rightmove_url = requests.get(
-    f"https://www.rightmove.co.uk/property-to-rent/find.html?locationIdentifier=REGION%5E93917&maxBedrooms=2&minBedrooms=2&maxPrice={MAX_PRICE}&minPrice={MIN_PRICE}&index=12&propertyTypes=flat&mustHave=&dontShow=&furnishTypes=&keywords="
+    f"https://www.rightmove.co.uk/property-to-rent/find.html?locationIdentifier=REGION%5E93917&maxBedrooms=2&minBedrooms=2&maxPrice={MAX_PRICE}&minPrice={MIN_PRICE}&index=24&propertyTypes=flat&mustHave=&dontShow=&furnishTypes=&keywords="
 ).text
 
 creds = None
@@ -60,9 +59,15 @@ def get_specific_listing(url):
         "price": re.sub(
             r"[^0-9]", "", json_obj["propertyData"]["prices"]["secondaryPrice"]
         ),
-        "price_per_person": round(int(re.sub(
-            r"[^0-9]", "", json_obj["propertyData"]["prices"]["secondaryPrice"]
-        )) / config["BEDROOMS"], 2),
+        "price_per_person": round(
+            int(
+                re.sub(
+                    r"[^0-9]", "", json_obj["propertyData"]["prices"]["secondaryPrice"]
+                )
+            )
+            / config["BEDROOMS"],
+            2,
+        ),
         "latitude": json_obj["analyticsInfo"]["analyticsProperty"]["latitude"],
         "longitude": json_obj["analyticsInfo"]["analyticsProperty"]["longitude"],
         "postcode": json_obj["analyticsInfo"]["analyticsProperty"]["postcode"],
@@ -142,6 +147,26 @@ def haversine_dist(lat1, lon1, lat2, lon2):
     return round(distance, 1)
 
 
+def rule_set_filter(entry):
+    if (
+        (
+            float(entry["bloom_office_distance"].rstrip(" km"))
+            + float(entry["pltr_office_distance"].rstrip(" km"))
+        )
+        / 2
+    ) > config["MAX_DIST_TO_OFFICES"]:
+        # print(
+        #     f'EXCEEDING MAX DIST TO OFFICE: {(float(entry["bloom_office_distance"].rstrip(" km")) + float(entry["pltr_office_distance"].rstrip(" km"))) / 2}'
+        # )
+        return False
+
+    if entry["bathrooms"] and entry["bathrooms"] < config["BATHROOMS"]:
+        # print("BELOW MIN BATHROOMS")
+        return False
+
+    return True
+
+
 def page_listings(existing_ids):
     soup = BeautifulSoup(rightmove_url, "html.parser")
     links = set(
@@ -161,6 +186,7 @@ def page_listings(existing_ids):
         ):
             continue
         result.append(get_specific_listing(link))
+
     locations = [(x["latitude"], x["longitude"]) for x in result]
 
     for i in range(0, len(locations), 10):
@@ -169,19 +195,11 @@ def page_listings(existing_ids):
             result[i + j]["bloom_office_distance"] = entry["bloom_office_distance"]
             result[i + j]["pltr_office_distance"] = entry["pltr_office_distance"]
 
-    result = list(
-        filterfalse(
-            lambda entry: (
-                (
-                    float(entry["bloom_office_distance"].rstrip(" km"))
-                    + float(entry["pltr_office_distance"].rstrip(" km"))
-                )
-                / 2
-            )
-            > config["MAX_DIST_TO_OFFICES"],
-            result,
-        )
-    )
+    print(len(result))
+
+    result = [entry for entry in result if rule_set_filter(entry)]
+
+    print(len(result))
 
     for entry in result:
         entry["supermarkets"] = search_closest_grocery_store(
