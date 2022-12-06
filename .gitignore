@@ -2,3 +2,4 @@ housescraper/
 config.json
 sheets.json
 token.json
+.DS_Store
