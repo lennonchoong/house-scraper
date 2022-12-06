@@ -60,6 +60,9 @@ def get_specific_listing(url):
         "price": re.sub(
             r"[^0-9]", "", json_obj["propertyData"]["prices"]["secondaryPrice"]
         ),
+        "price_per_person": round(int(re.sub(
+            r"[^0-9]", "", json_obj["propertyData"]["prices"]["secondaryPrice"]
+        )) / config["BEDROOMS"], 2),
         "latitude": json_obj["analyticsInfo"]["analyticsProperty"]["latitude"],
         "longitude": json_obj["analyticsInfo"]["analyticsProperty"]["longitude"],
         "postcode": json_obj["analyticsInfo"]["analyticsProperty"]["postcode"],
