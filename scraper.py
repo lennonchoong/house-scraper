@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from math import sin, cos, sqrt, atan2, radians
 from itertools import filterfalse
 import os.path
-
+from datetime import datetime
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -17,7 +17,7 @@ MIN_PRICE = int(round(config["MIN_PRICE"] * config["BEDROOMS"] * 4.4, -2))
 MAX_PRICE = int(round(config["MAX_PRICE"] * config["BEDROOMS"] * 4.4, -2))
 
 rightmove_url = requests.get(
-    f"https://www.rightmove.co.uk/property-to-rent/find.html?locationIdentifier=REGION%5E93917&maxBedrooms=2&minBedrooms=2&maxPrice={MAX_PRICE}&minPrice={MIN_PRICE}&index=24&propertyTypes=flat&mustHave=&dontShow=&furnishTypes=&keywords="
+    f"https://www.rightmove.co.uk/property-to-rent/find.html?locationIdentifier=REGION%5E93917&maxBedrooms=2&minBedrooms=2&maxPrice={MAX_PRICE}&minPrice={MIN_PRICE}&index=12&propertyTypes=flat&mustHave=&dontShow=&furnishTypes=&keywords="
 ).text
 
 creds = None
@@ -215,8 +215,10 @@ def write_to_sheet(listings):
     try:
         service = build("sheets", "v4", credentials=creds)
 
+        date_added = datetime.today().strftime('%d-%m-%Y')
+
         # Call the Sheets API
-        rows = [list(row.values()) for row in listings]
+        rows = [list(row.values()) + [date_added] for row in listings]
         service.spreadsheets().values().append(
             spreadsheetId=config["SPREADSHEET_ID"],
             range="Sheet1!A:Z",
