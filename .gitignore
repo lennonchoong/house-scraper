@@ -3,3 +3,6 @@ config.json
 sheets.json
 token.json
 .DS_Store
+__pycache__/
+tempCodeRunnerFile.py
+node_modules/
