@@ -38,9 +38,9 @@ class ZooplaScraper:
             "id": listing_deets["listingId"] + "_z",
             "address": listing_deets["adTargeting"]["displayAddress"],
             "link": url,
-            "price": listing_deets["pricing"]["alternateRentFrequencyPrice"][
+            "price": round(listing_deets["pricing"]["alternateRentFrequencyPrice"][
                 "internalValue"
-            ],
+            ], 2),
             "price_per_person": listing_deets["pricing"]["alternateRentFrequencyPrice"][
                 "internalValue"
             ]
@@ -68,10 +68,15 @@ class ZooplaScraper:
         ], timeout=60000)
 
         links = set(json.loads(output))
+        print("Zoopla links", links)
+        result = []
+        for url in links:
+            if url[:url.index("/?")].lstrip("https://www.zoopla.co.uk/to-rent/details/") + '_z' in existing_ids:
+                continue
 
-        result = [self.get_specific_listing(url) for url in links]
+            result.append(self.get_specific_listing(url))
 
-        add_distances_to_offices(result)
+        result = add_distances_to_offices(result)
 
         result = [entry for entry in result if self.rule_set_filter(entry)]
 

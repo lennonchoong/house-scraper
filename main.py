@@ -35,6 +35,17 @@ if __name__ == "__main__":
         f'SEARCHING FOR HOUSES WITH {config["BEDROOMS"]} BEDROOMS FROM PRICES {MIN_PRICE}GBP - {MAX_PRICE}GBP ON RIGHTMOVE.CO.UK'
     )
     existing_ids = get_listing_ids()
+    rightmove_scraper = RightmoveScraper(
+        config=config,
+        min_price=MIN_PRICE,
+        max_price=MAX_PRICE,
+        rule_set_filter=rule_set_filter,
+    )
+    rightmove_scraper.scrape(existing_ids)
+
+    print(
+        f'SEARCHING FOR HOUSES WITH {config["BEDROOMS"]} BEDROOMS FROM PRICES {MIN_PRICE}GBP - {MAX_PRICE}GBP ON ZOOPLA.COM'
+    )
     rightmove_scraper = ZooplaScraper(
         config=config,
         min_price=MIN_PRICE,

@@ -93,6 +93,7 @@ class RightmoveScraper:
                 for a in soup.select(".propertyCard-link")
             ]
         )
+        print("Rightmove links", links)
         result = []
 
         for link in links:
@@ -105,7 +106,7 @@ class RightmoveScraper:
                 continue
             result.append(self.get_specific_listing(link))
 
-        add_distances_to_offices(result)
+        result = add_distances_to_offices(result)
 
         result = [entry for entry in result if self.rule_set_filter(entry)]
 

@@ -19,8 +19,12 @@ def get_distances_to_office(origins):
         bloom_office, pltr_office = row["elements"]
         aggregate.append(
             {
-                "bloom_office_distance": bloom_office["distance"]["text"],
-                "pltr_office_distance": pltr_office["distance"]["text"],
+                "bloom_office_distance": bloom_office["distance"]["text"]
+                if "distance" in bloom_office
+                else None,
+                "pltr_office_distance": pltr_office["distance"]["text"]
+                if "distance" in pltr_office
+                else None,
             }
         )
     return aggregate
@@ -100,6 +104,7 @@ def add_distances_to_offices(entries):
             entries[i + j]["bloom_office_distance"] = entry["bloom_office_distance"]
             entries[i + j]["pltr_office_distance"] = entry["pltr_office_distance"]
 
+    return [entry for entry in entries if entry['bloom_office_distance'] and entry["pltr_office_distance"]]
 
 def add_supermarket_and_gym(entries):
     for entry in entries:

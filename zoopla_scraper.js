@@ -21,7 +21,11 @@ const config = require("./config.json");
     // Extract the results from the page.
     const links = await page.evaluate((resultsSelector) => {
         const regularListings = document.querySelector(resultsSelector);
+        const featuredListings = document.querySelector(
+            "[data-testid='featured-listings']"
+        );
         return [...regularListings.querySelectorAll("a")]
+            .concat([...featuredListings.querySelectorAll("a")])
             .map((d) => d.href)
             .filter((d) =>
                 /https:\/\/www\.zoopla\.co\.uk\/to-rent\/details\/[0-9]+/.test(
