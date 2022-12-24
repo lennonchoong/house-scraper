@@ -8,7 +8,9 @@ with open("./config.json") as f:
 
 def get_distances_to_office(origins):
     office_locations = config["OFFICE_LOCATIONS"]
-    destination_string = "%7C".join([f"{x[0]}%2C{x[1]}" for x in office_locations])
+    destination_string = "%7C".join(
+        [f'{x["longitude"]}%2C{x["latitude"]}' for x in office_locations]
+    )
     origin_string = "%7C".join([f"{x[0]}%2C{x[1]}" for x in origins])
     result = requests.get(
         f'https://maps.googleapis.com/maps/api/distancematrix/json?destinations={destination_string}&origins={origin_string}&mode=transit&key={config["GOOGLE_MAP_API_KEY"]}'
@@ -16,17 +18,16 @@ def get_distances_to_office(origins):
     rows = result["rows"]
     aggregate = []
     for row in rows:
-        bloom_office, pltr_office = row["elements"]
-        aggregate.append(
-            {
-                "bloom_office_distance": bloom_office["distance"]["text"]
-                if "distance" in bloom_office
-                else None,
-                "pltr_office_distance": pltr_office["distance"]["text"]
-                if "distance" in pltr_office
-                else None,
-            }
-        )
+        office_distances = {}
+        for i, office in enumerate(office_locations):
+            cur_row_element = row["elements"][i]
+            office_distances[office["name"]] = (
+                cur_row_element["distance"]["text"]
+                if "distance" in cur_row_element
+                else None
+            )
+
+        aggregate.append(office_distances)
     return aggregate
 
 
@@ -97,14 +98,18 @@ def haversine_dist(lat1, lon1, lat2, lon2):
 
 def add_distances_to_offices(entries):
     locations = [(x["latitude"], x["longitude"]) for x in entries]
-
     for i in range(0, len(locations), 10):
         loc_slice = locations[i : i + 10]
         for j, entry in enumerate(get_distances_to_office(loc_slice)):
-            entries[i + j]["bloom_office_distance"] = entry["bloom_office_distance"]
-            entries[i + j]["pltr_office_distance"] = entry["pltr_office_distance"]
+            for office in config["OFFICE_LOCATIONS"]:
+                entries[i + j][office["name"]] = entry[office["name"]]
 
-    return [entry for entry in entries if entry['bloom_office_distance'] and entry["pltr_office_distance"]]
+    return [
+        entry
+        for entry in entries
+        if all([office["name"] in entry for office in config["OFFICE_LOCATIONS"]])
+    ]
+
 
 def add_supermarket_and_gym(entries):
     for entry in entries:

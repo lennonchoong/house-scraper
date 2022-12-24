@@ -12,10 +12,12 @@ MAX_PRICE = int(round(config["MAX_PRICE"] * config["BEDROOMS"] * 4.4, -2))
 
 def rule_set_filter(entry):
     if (
-        (
-            float(entry["bloom_office_distance"].rstrip(" km"))
-            + float(entry["pltr_office_distance"].rstrip(" km"))
-        )
+        any([entry[office['name']] == None for office in config["OFFICE_LOCATIONS"]])
+    ):
+        return False
+
+    if (
+        sum([float(entry[office["name"]].rstrip(' km')) for office in config["OFFICE_LOCATIONS"]])
         / 2
     ) > config["MAX_DIST_TO_OFFICES"]:
         # print(
