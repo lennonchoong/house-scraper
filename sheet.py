@@ -7,12 +7,22 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import json
+
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+    
+SPREADSHEET_ID = ""
+
+try:
+    with open('./config.json') as f:
+        config = json.load(f)
+        SPREADSHEET_ID = config["SPREADSHEET_ID"]
+except:
+    print("NO SPREADSHEET_ID")
 
 # The ID and range of a sample spreadsheet.
-SPREADSHEET_ID = "180p7n6W-GFSBuYu9Xd-_tE0ypJMcBACDMm3kwnnHc_0"
 SAMPLE_RANGE_NAME = "A2:E1"
 
 
@@ -27,56 +37,16 @@ def main():
     if os.path.exists("token.json"):
         creds = Credentials.from_authorized_user_file("token.json", SCOPES)
 
-    # # If there are no (valid) credentials available, let the user log in.
-    # if not creds or not creds.valid:
-    #     if creds and creds.expired and creds.refresh_token:
-    #         creds.refresh(Request())
-    #     else:
-    #         flow = InstalledAppFlow.from_client_secrets_file("sheets.json", SCOPES)
-    #         creds = flow.run_local_server(port=0)
-    #     # Save the credentials for the next run
-    #     with open("token.json", "w") as token:
-    #         token.write(creds.to_json())
-
-    # try:
-    #     service = build("sheets", "v4", credentials=creds)
-
-    #     # Call the Sheets API
-    #     sheet = service.spreadsheets()
-    #     result = (
-    #         sheet.values()
-    #         .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range=SAMPLE_RANGE_NAME)
-    #         .execute()
-    #     )
-    #     values = result.get("values", [])
-
-    #     if not values:
-    #         print("No data found.")
-    #         return
-
-    #     print("Name, Major:")
-    #     for row in values:
-    #         # Print columns A and E, which correspond to indices 0 and 4.
-    #         print("%s, %s" % (row[0], row[4]))
-    # except HttpError as err:
-    #     print(err)
-
-    try:
-        service = build("sheets", "v4", credentials=creds)
-
-        # Call the Sheets API
-        rows = [[
-            "adada", "vvcc", "cxz"
-        ]]
-        service.spreadsheets().values().append(
-            spreadsheetId=SPREADSHEET_ID,
-            range="Sheet1!A:Z",
-            body={"majorDimension": "ROWS", "values": rows},
-            valueInputOption="USER_ENTERED",
-        ).execute()
-    except HttpError as err:
-        print(err)
-
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file("sheets.json", SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open("token.json", "w") as token:
+            token.write(creds.to_json())
 
 if __name__ == "__main__":
     main()

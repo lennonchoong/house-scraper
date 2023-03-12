@@ -11,13 +11,16 @@ MAX_PRICE = int(round(config["MAX_PRICE"] * config["BEDROOMS"] * 4.4, -2))
 
 
 def rule_set_filter(entry):
-    if (
-        any([entry[office['name']] == None for office in config["OFFICE_LOCATIONS"]])
-    ):
+    if any([entry[office["name"]] is None for office in config["OFFICE_LOCATIONS"]]):
         return False
 
     if (
-        sum([float(entry[office["name"]].rstrip(' km')) for office in config["OFFICE_LOCATIONS"]])
+        sum(
+            [
+                float(entry[office["name"]].rstrip(" km"))
+                for office in config["OFFICE_LOCATIONS"]
+            ]
+        )
         / 2
     ) > config["MAX_DIST_TO_OFFICES"]:
         # print(
@@ -33,9 +36,7 @@ def rule_set_filter(entry):
 
 
 if __name__ == "__main__":
-    print(
-        f'SEARCHING FOR HOUSES WITH {config["BEDROOMS"]} BEDROOMS FROM PRICES {MIN_PRICE}GBP - {MAX_PRICE}GBP ON RIGHTMOVE.CO.UK'
-    )
+    print(f'SEARCHING FOR HOUSES WITH {config["BEDROOMS"]} BEDROOMS FROM PRICES {MIN_PRICE}GBP - {MAX_PRICE}GBP ON RIGHTMOVE.CO.UK')
     existing_ids = get_listing_ids()
     rightmove_scraper = RightmoveScraper(
         config=config,
@@ -45,9 +46,7 @@ if __name__ == "__main__":
     )
     rightmove_scraper.scrape(existing_ids)
 
-    print(
-        f'SEARCHING FOR HOUSES WITH {config["BEDROOMS"]} BEDROOMS FROM PRICES {MIN_PRICE}GBP - {MAX_PRICE}GBP ON ZOOPLA.COM'
-    )
+    print(f'SEARCHING FOR HOUSES WITH {config["BEDROOMS"]} BEDROOMS FROM PRICES {MIN_PRICE}GBP - {MAX_PRICE}GBP ON ZOOPLA.COM')
     rightmove_scraper = ZooplaScraper(
         config=config,
         min_price=MIN_PRICE,
